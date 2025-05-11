@@ -12,6 +12,8 @@ from datetime import datetime
 # import time # Not used directly in TenderScraper after removing schedule_scraper
 import configparser
 from urllib.parse import urljoin
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Set up logging
 logging.basicConfig(
@@ -43,6 +45,7 @@ class TenderScraper:
             'password': self.config.get('Email', 'password', fallback=''),
             'recipient_email': self.config.get('Email', 'recipient_email', fallback='')
         }
+        self.keywords = self.config.get('General', 'keywords', fallback='').split(',')
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -78,25 +81,41 @@ class TenderScraper:
         if os.path.exists(self.websites_config_path):
             try:
                 with open(self.websites_config_path, 'r') as f:
-                    return json.load(f)
+                    config_data = json.load(f)
+                    websites = []
+
+                    for entry in config_data:
+                        if entry.get("is_group", False):
+                            # Handle grouped websites
+                            shared_config = entry.get("shared_config", {})
+                            for website in entry.get("websites", []):
+                                # Merge shared config with individual website config
+                                website_config = {**shared_config, **website}
+                                websites.append(website_config)
+                        else:
+                            # Handle individual website
+                            websites.append(entry)
+
+                    return websites
             except json.JSONDecodeError:
                 logger.error(f"Error decoding websites config file: {self.websites_config_path}")
-                return [] # Return empty list on error
+                return []  # Return empty list on error
         else:
             logger.warning(f"Websites config file not found: {self.websites_config_path}. Creating default.")
             default_websites = [
                 {
-                    'name': 'DAV CSP',
-                    'url': 'https://davcsp.org/NoticeBoardDetail.aspx',
-                    'selector': '.notice-list-box',
-                    'title_selector': '.head-text',
-                    'date_selector': '.date-text',
-                    'link_selector': 'a',
-                    'base_url': 'https://davcsp.org/'
+                    "is_group": False,
+                    "name": "DAV CSP",
+                    "url": "https://davcsp.org/NoticeBoardDetail.aspx",
+                    "selector": ".panel-body > div > ul > li",
+                    "title_selector": ".panel-body > div > ul > li > div > p",
+                    "date_selector": ".Mi-Notice-Board-Date",
+                    "link_selector": ".Mi-Notice-Board-Date > span > a",
+                    "base_url": "https://davcsp.org/"
                 }
             ]
             os.makedirs(os.path.dirname(self.websites_config_path), exist_ok=True)
-            self.save_websites_config(default_websites) # Save it so it exists next time
+            self.save_websites_config(default_websites)
             return default_websites
 
     def save_websites_config(self, websites):
@@ -141,8 +160,41 @@ class TenderScraper:
                     link_element = tender_element.select_one(website_config['link_selector'])
                     
                     title = title_element.text.strip() if title_element else "Unknown Title"
-                    date = date_element.text.strip() if date_element else "Unknown Date"
-                    
+                    date = "Unknown Date"
+                    if date_element:
+                        date_text = date_element.text.strip()
+                        # Try to extract date using regex (supports formats like DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, etc.)
+                        match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})', date_text)
+                        if match:
+                            raw_date = match.group(1)
+                            # Try to parse and convert to dd/mm/yy
+                            try:
+                                # Replace - with / for uniformity
+                                raw_date = raw_date.replace('-', '/')
+                                # Try parsing various formats
+                                for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y/%m/%d", "%Y/%d/%m"):
+                                    try:
+                                        dt = datetime.strptime(raw_date, fmt)
+                                        date = dt.strftime("%d/%m/%y")
+                                        break
+                                    except ValueError:
+                                        continue
+                                else:
+                                    date = raw_date  # fallback if no format matched
+                            except Exception:
+                                date = raw_date
+                        else:
+                            date = date_text  # fallback to original text if no date found
+                    # Filter tenders based on keywords
+                    # Calculate match score based on keywords
+                    match_score = 0
+                    for keyword in self.keywords:
+                        keyword = keyword.strip()
+                        if keyword and keyword.lower() in title.lower():
+                            match_score += 1
+                    if match_score == 0:
+                        continue
+
                     link = ""
                     if link_element and link_element.has_attr('href'):
                         link_href = link_element['href']
@@ -155,6 +207,7 @@ class TenderScraper:
                     tender_id = f"{website_config['name']}_{title}_{date}"
                     tender_info = {
                         'id': tender_id,
+                        'match_score': match_score,
                         'tag': website_config['name'],
                         'website': website_config['url'],
                         'title': title,
@@ -177,22 +230,31 @@ class TenderScraper:
     def scrape_all_websites(self):
         all_tenders_data = {}
         new_tenders_data = {}
-        for website_config in self.websites:
-            tenders = self.scrape_website(website_config)
-            website_name = website_config['name']
-            all_tenders_data[website_name] = tenders
-            
-            # Check for new tenders
-            if website_name in self.previous_tenders:
-                prev_ids = {t['id'] for t in self.previous_tenders.get(website_name, [])} # Ensure previous_tenders[website_name] is a list
-                new_tenders_data[website_name] = [t for t in tenders if t['id'] not in prev_ids]
-            else:
-                new_tenders_data[website_name] = tenders
-        
+
+        # Use ThreadPoolExecutor for multithreading
+        with ThreadPoolExecutor(max_workers=5) as executor:  # Adjust max_workers based on your system's capabilities
+            future_to_website = {executor.submit(self.scrape_website, website_config): website_config for website_config in self.websites}
+
+            for future in as_completed(future_to_website):
+                website_config = future_to_website[future]
+                website_name = website_config['name']
+                try:
+                    tenders = future.result()
+                    all_tenders_data[website_name] = tenders
+
+                    # Check for new tenders
+                    if website_name in self.previous_tenders:
+                        prev_ids = {t['id'] for t in self.previous_tenders.get(website_name, [])}
+                        new_tenders_data[website_name] = [t for t in tenders if t['id'] not in prev_ids]
+                    else:
+                        new_tenders_data[website_name] = tenders
+                except Exception as e:
+                    logger.error(f"Error scraping website {website_name}: {e}")
+
         self.save_to_csv(all_tenders_data)
-        self.save_current_tenders(all_tenders_data) # Save all current tenders as new "previous"
-        self.previous_tenders = all_tenders_data # Update in-memory previous_tenders
-        
+        self.save_current_tenders(all_tenders_data)  # Save all current tenders as new "previous"
+        self.previous_tenders = all_tenders_data  # Update in-memory previous_tenders
+
         return all_tenders_data, new_tenders_data
 
     def save_to_csv(self, all_tenders_map):

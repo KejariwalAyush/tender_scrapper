@@ -1,29 +1,63 @@
 [
   {
-    "name": "DAV CSP",
-    "url": "https://davcsp.org/NoticeBoardDetail.aspx",
-    "selector": ".panel-body > div > ul > li",
-    "title_selector": ".panel-body > div > ul > li > div > p",
-    "date_selector": ".Mi-Notice-Board-Date",
-    "link_selector": ".Mi-Notice-Board-Date > span > a",
-    "base_url": "https://davcsp.org/"
+    "is_group": false,
+    "name": "ISPAT AUTONOMOUS COLLEGE ROURKELA",
+    "url": "https://ispatcollegerkl.com/tender.php",
+    "selector": ".sec-top > ul > li",
+    "title_selector": ".sec-top > ul > li > h5",
+    "date_selector": ".sec-top > ul > li > span",
+    "link_selector": ".sec-top > ul > li > div > a",
+    "base_url": "https://ispatcollegerkl.com"
   },
   {
-    "name": "DAV RKL",
-    "url": "http://davrkl.org/NoticeBoardDetail.aspx",
-    "selector": ".panel-body > div > ul > li",
-    "title_selector": ".panel-body > div > ul > li > div > p",
-    "date_selector": ".Mi-Notice-Board-Date",
-    "link_selector": ".Mi-Notice-Board-Date > span > a",
-    "base_url": "https://davrkl.org/"
-  },
-  {
-    "name": "DAV Jharsugada",
-    "url": "http://davjharsuguda.org/NoticeBoardDetail.aspx",
-    "selector": ".panel-body > div > ul > li",
-    "title_selector": ".panel-body > div > ul > li > div > p",
-    "date_selector": ".Mi-Notice-Board-Date",
-    "link_selector": ".Mi-Notice-Board-Date > span > a",
-    "base_url": "https://davjharsuguda.org/"
+    "is_group": true,
+    "shared_config": {
+      "selector": ".panel-body > div > ul > li",
+      "title_selector": ".panel-body > div > ul > li > div > p",
+      "date_selector": ".Mi-Notice-Board-Date",
+      "link_selector": ".Mi-Notice-Board-Date > span > a"
+    },
+    "websites": [
+      {
+        "name": "DAV CSP",
+        "url": "https://davcsp.org/NoticeBoardDetail.aspx",
+        "base_url": "https://davcsp.org/"
+      },
+      {
+        "name": "DAV ANK RKL",
+        "url": "http://davrkl.org/NoticeBoardDetail.aspx",
+        "base_url": "https://davrkl.org/"
+      },
+      {
+        "name": "DAV RKL - SEC 16",
+        "url": "http://davsec16.co.in/NoticeBoardDetail.aspx",
+        "base_url": "http://davsec16.co.in/"
+      },
+      {
+        "name": "DAV JHARSUGUDA",
+        "url": "http://davjharsuguda.org/NoticeBoardDetail.aspx",
+        "base_url": "https://davjharsuguda.org/"
+      },
+      {
+        "name": "DAV Dera",
+        "url": "http://davdera.org/NoticeBoardDetail.aspx",
+        "base_url": "http://davdera.org/"
+      },
+      {
+        "name": "DAV Kalinga Area, Talcher",
+        "url": "http://davkalinga.org/NoticeBoardDetail.aspx",
+        "base_url": "http://davkalinga.org/"
+      },
+      {
+        "name": "DAV Burla",
+        "url": "http://davburla.org/NoticeBoardDetail.aspx",
+        "base_url": "http://davburla.org/"
+      },
+      {
+        "name": "DAV IB VALLEY AREA (MCL), BRAJRAJNAGAR",
+        "url": "http://davbrajrajnagar.in/NoticeBoardDetail.aspx",
+        "base_url": "http://davbrajrajnagar.in/"
+      }
+    ]
   }
 ]

@@ -122,39 +122,120 @@ function populateWebsiteFilter(websites) {
 function displayTenders(tenders) {
     const container = document.getElementById('tenders-container');
     container.innerHTML = '';
-    
+
     if (tenders.length === 0) {
         container.innerHTML = '<div class="col-12"><div class="alert alert-info">No tenders found</div></div>';
         return;
     }
-    
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-    
-    tenders.forEach(tender => {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 col-lg-4';
-        
-        const isNew = tender.scraped_at && new Date(tender.scraped_at) > yesterday;
-        
-        col.innerHTML = `
-            <div class="card tender-card">
-            <div class="card-body">
-                <p class="card-subtitle mb-2 ${tender.link ? 'text-success' : 'text-muted'}">
-                ${tender.link 
-                    ? `<a href="${tender.link}" class="text-success text-decoration-underline" target="_blank">${tender.date}</a>` 
-                    : tender.date}
-                </p>
-                <h4 class="card-title" style="font-size: 1.2rem; font-weight: bold;">
-                <a href="${tender.website}" target="_blank" class="text-decoration-none text-dark">${tender.title}</a>
-                </h4>
-                <p class="card-text">Source: ${tender.tag}</p>
-            </div>
-            </div>
-        `;
-        
-        container.appendChild(col);
+
+    // Sort tenders: newest date first, then by highest match_score
+    tenders.sort((a, b) => {
+        // Sort by date (descending)
+        function parseDMY(dateStr) {
+            // Handles dd/mm/yy or dd/mm/yyyy
+            if (!dateStr) return new Date(0);
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return new Date(0);
+            let [d, m, y] = parts;
+            d = parseInt(d, 10);
+            m = parseInt(m, 10) - 1;
+            y = parseInt(y, 10);
+            if (y < 100) y += 2000;
+            return new Date(y, m, d);
+        }
+        const dateA = parseDMY(a.date);
+        const dateB = parseDMY(b.date);
+        if (dateB - dateA !== 0) return dateB - dateA;
+
+        // If dates are equal, sort by match_score (descending)
+        const scoreA = typeof a.match_score === 'number' ? a.match_score : -Infinity;
+        const scoreB = typeof b.match_score === 'number' ? b.match_score : -Infinity;
+        return scoreB - scoreA;
     });
+
+    const table = document.createElement('table');
+    table.className = 'table table-striped table-bordered';
+
+    // Create table header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>Sl. No.</th>
+            <th>Title</th>
+            <th>Match Score</th>
+            <th>Date</th>
+            <th>Source</th>
+            <th>Link</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    // Find the highest match score
+    let maxScore = -Infinity;
+    tenders.forEach(t => {
+        if (typeof t.match_score === 'number' && t.match_score > maxScore) {
+            maxScore = t.match_score;
+        }
+    });
+
+    // Create table body
+    const tbody = document.createElement('tbody');
+    tenders.forEach((tender, idx) => {
+        const row = document.createElement('tr');
+
+        // Sl. No.
+        const slNoCell = document.createElement('td');
+        slNoCell.textContent = idx + 1;
+        row.appendChild(slNoCell);
+
+        // Title
+        const titleCell = document.createElement('td');
+        titleCell.innerHTML = `<a href="${tender.website}" target="_blank" class="text-decoration-none text-dark">${tender.title}</a>`;
+        row.appendChild(titleCell);
+
+        // Match Score with color highlighting
+        const scoreCell = document.createElement('td');
+        let score = tender.match_score;
+        let scoreText = score !== undefined ? score : 'N/A';
+        let scoreClass = '';
+        if (typeof score === 'number') {
+            if (score === maxScore && maxScore > 0) {
+                scoreClass = 'bg-success text-white fw-bold'; // Top score: green
+            } else if (score >= maxScore * 0.75) {
+                scoreClass = 'bg-primary text-white'; // High: blue
+            } else if (score >= maxScore * 0.5) {
+                scoreClass = 'bg-warning text-dark'; // Medium: yellow
+            } else {
+                scoreClass = 'bg-secondary text-white'; // Low: gray
+            }
+        } else {
+            scoreClass = 'bg-secondary text-white';
+        }
+        scoreCell.innerHTML = `<span class="px-2 py-1 rounded ${scoreClass}">${scoreText}</span>`;
+        row.appendChild(scoreCell);
+
+        // Date
+        const dateCell = document.createElement('td');
+        dateCell.innerHTML = tender.date;
+        row.appendChild(dateCell);
+
+        // Source
+        const sourceCell = document.createElement('td');
+        sourceCell.textContent = tender.tag;
+        row.appendChild(sourceCell);
+
+        // Link
+        const linkCell = document.createElement('td');
+        linkCell.innerHTML = tender.link 
+            ? `<a href="${tender.link}" target="_blank">View</a>` 
+            : 'N/A';
+        row.appendChild(linkCell);
+
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    container.appendChild(table);
 }
 
 function filterTenders() {
@@ -164,7 +245,7 @@ function filterTenders() {
     let filteredTenders = [...tenderData];
     
     if (websiteFilter) {
-        filteredTenders = filteredTenders.filter(tender => tender.website === websiteFilter);
+        filteredTenders = filteredTenders.filter(tender => tender.tag === websiteFilter);
     }
     
     if (searchText) {

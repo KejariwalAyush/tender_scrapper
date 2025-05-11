@@ -13,6 +13,7 @@ class Tender(BaseModel):
     link: Optional[str] = None
     scraped_at: str
     tag: Optional[str] = None
+    match_score: Optional[float] = None
 
 class WebsiteConfig(BaseModel):
     name: str
