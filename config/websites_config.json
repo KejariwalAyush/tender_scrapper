@@ -1,0 +1,29 @@
+[
+  {
+    "name": "DAV CSP",
+    "url": "https://davcsp.org/NoticeBoardDetail.aspx",
+    "selector": ".panel-body > div > ul > li",
+    "title_selector": ".panel-body > div > ul > li > div > p",
+    "date_selector": ".Mi-Notice-Board-Date",
+    "link_selector": ".Mi-Notice-Board-Date > span > a",
+    "base_url": "https://davcsp.org/"
+  },
+  {
+    "name": "DAV RKL",
+    "url": "http://davrkl.org/NoticeBoardDetail.aspx",
+    "selector": ".panel-body > div > ul > li",
+    "title_selector": ".panel-body > div > ul > li > div > p",
+    "date_selector": ".Mi-Notice-Board-Date",
+    "link_selector": ".Mi-Notice-Board-Date > span > a",
+    "base_url": "https://davrkl.org/"
+  },
+  {
+    "name": "DAV Jharsugada",
+    "url": "http://davjharsuguda.org/NoticeBoardDetail.aspx",
+    "selector": ".panel-body > div > ul > li",
+    "title_selector": ".panel-body > div > ul > li > div > p",
+    "date_selector": ".Mi-Notice-Board-Date",
+    "link_selector": ".Mi-Notice-Board-Date > span > a",
+    "base_url": "https://davjharsuguda.org/"
+  }
+]

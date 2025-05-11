@@ -1,0 +1,13 @@
+# filepath: requirements.txt
+requests
+beautifulsoup4
+pandas
+configparser
+# smtplib is part of standard library
+# json is part of standard library
+# logging is part of standard library
+# datetime is part of standard library
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
