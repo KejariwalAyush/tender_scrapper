@@ -1,12 +1,12 @@
 [
     {
         "is_group": false,
-        "name": "BPUT",
-        "url": "https://www.bput.ac.in/tenders.php",
-        "selector": "tbody > tr",
-        "title_selector": "td:nth-child(4)",
-        "date_selector": "td:nth-child(3)",
-        "link_selector": "td:nth-child(5) a",
-        "base_url": "https://www.bput.ac.in"
+        "name": "Dalmia College Rajgangpur",
+        "url": "https://dalmiacollegergp.ac.in/tender",
+        "selector": "tbody tr",
+        "title_selector": "td.news-li div.gentext",
+        "date_selector": "td.news-li div.date",
+        "link_selector": "td.news-li div.document-link a",
+        "base_url": "https://dalmiacollegergp.ac.in"
     }
 ]

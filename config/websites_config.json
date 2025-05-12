@@ -10,6 +10,36 @@
     "base_url": "https://ispatcollegerkl.com"
   },
   {
+    "is_group": false,
+    "name": "Sambalpur University",
+    "url": "https://www.suniv.ac.in/tenders.php",
+    "selector": "tbody > tr",
+    "title_selector": "td:nth-child(2)",
+    "date_selector": "td:nth-child(4)",
+    "link_selector": "td:nth-child(5) a",
+    "base_url": "https://www.suniv.ac.in"
+  },
+  {
+    "is_group": false,
+    "name": "Dalmia College Rajgangpur",
+    "url": "https://dalmiacollegergp.ac.in/tender",
+    "selector": "tbody tr",
+    "title_selector": "td.news-li div.gentext",
+    "date_selector": "td.news-li div.date",
+    "link_selector": "td.news-li div.document-link a",
+    "base_url": "https://dalmiacollegergp.ac.in"
+  },
+  {
+    "is_group": false,
+    "name": "Utkal University",
+    "url": "https://utkaluniversity.ac.in/tenders/",
+    "selector": "#tables tbody tr",
+    "title_selector": "td:nth-child(2)",
+    "date_selector": "td:nth-child(4)",
+    "link_selector": "td:nth-child(5) a",
+    "base_url": "https://utkaluniversity.ac.in"
+  },
+  {
       "is_group": false,
       "name": "BPUT",
       "url": "https://www.bput.ac.in/tenders.php",
