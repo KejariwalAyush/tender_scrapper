@@ -10,6 +10,27 @@
     "base_url": "https://ispatcollegerkl.com"
   },
   {
+      "is_group": false,
+      "name": "BPUT",
+      "url": "https://www.bput.ac.in/tenders.php",
+      "selector": "tbody > tr",
+      "title_selector": "td:nth-child(4)",
+      "date_selector": "td:nth-child(3)",
+      "link_selector": "td:nth-child(5) a",
+      "base_url": "https://www.bput.ac.in"
+  },
+  {
+    "is_group": false,
+    "name": "Govt Tenders",
+    "url": "https://bidassist.com/all-tenders/active?filter=LOCATION_STRING:Odisha&filter=KEYWORD:register%7CPublishing%20and%20Printing%7CPrinting%7Cpaper&filter=DISTRICT_LOCATION:Kendujhar%7CBalangir%7CBaleshwar%7CSambalpur%7CSundergarh%7CJharsuguda&filter=TYPE_OF_CONTRACT:GOODS&sort=RELEVANCE:DESC&pageNumber=0&pageSize=10&tenderType=ACTIVE&tenderEntity=TENDER_LISTING&year=2024&removeUnavailableTenderAmountCards=false&removeUnavailableEmdCards=false",
+    "selector": ".block.card.clearfix",
+    "title_selector": "div > div > div > div > div > h2 > a",
+    "date_selector": ".dates",
+    "link_selector": "a",
+    "tags_selector": ".category-chips-wrap",
+    "base_url": "https://bidassist.com/all-tenders/active?filter=LOCATION_STRING:Odisha"
+  },
+  {
     "is_group": true,
     "shared_config": {
       "selector": ".panel-body > div > ul > li",

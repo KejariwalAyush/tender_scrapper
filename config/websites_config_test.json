@@ -1,0 +1,12 @@
+[
+    {
+        "is_group": false,
+        "name": "BPUT",
+        "url": "https://www.bput.ac.in/tenders.php",
+        "selector": "tbody > tr",
+        "title_selector": "td:nth-child(4)",
+        "date_selector": "td:nth-child(3)",
+        "link_selector": "td:nth-child(5) a",
+        "base_url": "https://www.bput.ac.in"
+    }
+]

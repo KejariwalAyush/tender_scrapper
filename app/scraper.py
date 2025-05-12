@@ -159,12 +159,33 @@ class TenderScraper:
                     date_element = tender_element.select_one(website_config['date_selector'])
                     link_element = tender_element.select_one(website_config['link_selector'])
                     
-                    title = title_element.text.strip() if title_element else "Unknown Title"
+                    tags = []
+                    if 'tags_selector' in website_config and website_config['tags_selector']:
+                        tag_elements = tender_element.select(website_config['tags_selector'])
+                        for tag_elem in tag_elements:
+                            if tag_elem and tag_elem.text:
+                                raw_tag = tag_elem.text.strip()
+                                # Insert a comma before an uppercase letter only if it follows a lowercase letter
+                                cleaned_tag = re.sub(r'(?<=[a-z])(?=[A-Z])', ', ', raw_tag)
+                                tags.append(cleaned_tag)
+                    # Always add website name as a tag
+                    tags.append(website_config['name'])
+                    
+                    # Extract title from attribute if present, else fallback to text
+                    if title_element:
+                        if title_element.has_attr('title') and title_element['title'].strip():
+                            title = title_element.text.strip() + ": " + title_element['title'].strip()
+                        else:
+                            title = title_element.text.strip()
+                    else:
+                        title = "Unknown Title"
                     date = "Unknown Date"
                     if date_element:
                         date_text = date_element.text.strip()
-                        # Try to extract date using regex (supports formats like DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, etc.)
-                        match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})', date_text)
+                        # Try to extract date using regex (supports formats like DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, etc. and '26 May 2025')
+                        match = re.search(
+                            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4})',
+                            date_text)
                         if match:
                             raw_date = match.group(1)
                             # Try to parse and convert to dd/mm/yy
@@ -172,14 +193,26 @@ class TenderScraper:
                                 # Replace - with / for uniformity
                                 raw_date = raw_date.replace('-', '/')
                                 # Try parsing various formats
+                                parsed = False
                                 for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y/%m/%d", "%Y/%d/%m"):
                                     try:
                                         dt = datetime.strptime(raw_date, fmt)
                                         date = dt.strftime("%d/%m/%y")
+                                        parsed = True
                                         break
                                     except ValueError:
                                         continue
-                                else:
+                                if not parsed:
+                                    # Try parsing '26 May 2025' or '26 May 25'
+                                    for fmt in ("%d %B %Y", "%d %b %Y", "%d %B %y", "%d %b %y"):
+                                        try:
+                                            dt = datetime.strptime(raw_date, fmt)
+                                            date = dt.strftime("%d/%m/%y")
+                                            parsed = True
+                                            break
+                                        except ValueError:
+                                            continue
+                                if not parsed:
                                     date = raw_date  # fallback if no format matched
                             except Exception:
                                 date = raw_date
@@ -192,8 +225,27 @@ class TenderScraper:
                         keyword = keyword.strip()
                         if keyword and keyword.lower() in title.lower():
                             match_score += 1
-                    if match_score == 0:
+
+                    # Skip if no keyword match
+                    if match_score < 1:
                         continue
+
+                    # Skip if tender is older than 6 months
+                    try:
+                        tender_date = None
+                        # Try to parse the date in dd/mm/yy or dd/mm/yyyy
+                        for fmt in ("%d/%m/%y", "%d/%m/%Y"):
+                            try:
+                                tender_date = datetime.strptime(date, fmt)
+                                break
+                            except Exception:
+                                continue
+                        if tender_date:
+                            three_months_ago = datetime.now() - pd.DateOffset(months=3)
+                            if tender_date < three_months_ago:
+                                continue
+                    except Exception:
+                        pass  # If date can't be parsed, don't skip
 
                     link = ""
                     if link_element and link_element.has_attr('href'):
@@ -208,7 +260,7 @@ class TenderScraper:
                     tender_info = {
                         'id': tender_id,
                         'match_score': match_score,
-                        'tag': website_config['name'],
+                        'tag': ', '.join([str(tag) for tag in tags]) if isinstance(tags, list) else str(tags),
                         'website': website_config['url'],
                         'title': title,
                         'date': date,

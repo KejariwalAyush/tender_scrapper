@@ -130,9 +130,7 @@ function displayTenders(tenders) {
 
     // Sort tenders: newest date first, then by highest match_score
     tenders.sort((a, b) => {
-        // Sort by date (descending)
         function parseDMY(dateStr) {
-            // Handles dd/mm/yy or dd/mm/yyyy
             if (!dateStr) return new Date(0);
             const parts = dateStr.split('/');
             if (parts.length !== 3) return new Date(0);
@@ -147,7 +145,6 @@ function displayTenders(tenders) {
         const dateB = parseDMY(b.date);
         if (dateB - dateA !== 0) return dateB - dateA;
 
-        // If dates are equal, sort by match_score (descending)
         const scoreA = typeof a.match_score === 'number' ? a.match_score : -Infinity;
         const scoreB = typeof b.match_score === 'number' ? b.match_score : -Infinity;
         return scoreB - scoreA;
@@ -180,6 +177,8 @@ function displayTenders(tenders) {
 
     // Create table body
     const tbody = document.createElement('tbody');
+    const currentDate = new Date();
+
     tenders.forEach((tender, idx) => {
         const row = document.createElement('tr');
 
@@ -190,7 +189,15 @@ function displayTenders(tenders) {
 
         // Title
         const titleCell = document.createElement('td');
-        titleCell.innerHTML = `<a href="${tender.website}" target="_blank" class="text-decoration-none text-dark">${tender.title}</a>`;
+        const truncatedTitle = tender.title.length > 200 ? tender.title.substring(0, 250) + '...' : tender.title;
+        titleCell.innerHTML = `
+            <span class="d-inline-block" style="max-width: 500px; cursor: pointer; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal;" title="Click to view full title">
+            ${truncatedTitle}
+            </span>
+        `;
+        titleCell.addEventListener('click', () => {
+            alert(`Full Title: ${tender.title}`);
+        });
         row.appendChild(titleCell);
 
         // Match Score with color highlighting
@@ -216,12 +223,48 @@ function displayTenders(tenders) {
 
         // Date
         const dateCell = document.createElement('td');
-        dateCell.innerHTML = tender.date;
+        // Parse DD/MM/YYYY safely
+        function parseDMY(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return null;
+            let [d, m, y] = parts;
+            d = parseInt(d, 10);
+            m = parseInt(m, 10) - 1;
+            y = parseInt(y, 10);
+            if (y < 100) y += 2000;
+            const dt = new Date(y, m, d);
+            // Check for invalid date
+            if (isNaN(dt.getTime())) return null;
+            return dt;
+        }
+        const tenderDate = parseDMY(tender.date);
+        const oneMonth = 30 * 24 * 60 * 60 * 1000;
+
+        if (tenderDate) {
+            if (Math.abs(tenderDate - currentDate) <= oneMonth) {
+                dateCell.innerHTML = `<strong>${tender.date}</strong>`;
+            } else if (tenderDate < currentDate) {
+                dateCell.innerHTML = `<span class="text-danger">${tender.date}</span>`;
+            } else {
+                dateCell.innerHTML = `<span class="text-success">${tender.date}</span>`;
+            }
+        } else {
+            dateCell.innerHTML = `<span class="text-muted">Invalid date</span>`;
+        }
         row.appendChild(dateCell);
 
-        // Source
+        // Source (as chips)
         const sourceCell = document.createElement('td');
-        sourceCell.textContent = tender.tag;
+        const sources = tender.tag
+            ? `<div style="max-width: 150px; white-space: wrap; overflow: hidden; text-overflow: ellipsis;">${
+            tender.tag.split(',').map(tag => `<span 
+                class="badge" style="background-color: #e6f4ea; color: #2f513c; border-radius: 50px; padding: 0.5em 1em margin: 0.2em;">
+                    ${tag.trim()}</span>`).join('')}
+                </span>
+              </div>`
+            : 'N/A';
+        sourceCell.innerHTML = sources;
         row.appendChild(sourceCell);
 
         // Link
@@ -245,7 +288,9 @@ function filterTenders() {
     let filteredTenders = [...tenderData];
     
     if (websiteFilter) {
-        filteredTenders = filteredTenders.filter(tender => tender.tag === websiteFilter);
+        filteredTenders = filteredTenders.filter(tender => 
+            tender.tag && tender.tag.toLowerCase().includes(websiteFilter.toLowerCase())
+        );
     }
     
     if (searchText) {
