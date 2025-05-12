@@ -63,6 +63,42 @@
   {
     "is_group": true,
     "shared_config": {
+      "selector": "tbody tr",
+      "title_selector": "td.views-field.views-field-title",
+      "date_selector": "td.views-field.views-field-nothing-2",
+      "link_selector": "td.views-field.views-field-nothing a"
+    },
+    "websites": [
+      {
+        "name": "Sundargarh Govt",
+        "url": "https://sundargarh.odisha.gov.in/tender?combine=print",
+        "base_url": "https://sundargarh.odisha.gov.in"
+      },
+      {
+        "name": "Sambalpur Govt",
+        "url": "https://sambalpur.odisha.gov.in/tender?combine=print",
+        "base_url": "https://sambalpur.odisha.gov.in"
+      },
+      {
+        "name": "Angul Govt",
+        "url": "https://angul.odisha.gov.in/tender?combine=print",
+        "base_url": "https://angul.odisha.gov.in"
+      },
+      {
+        "name": "Bargarh Govt",
+        "url": "https://bargarh.odisha.gov.in/tender?combine=print",
+        "base_url": "https://bargarh.odisha.gov.in"
+      },
+      {
+        "name": "Jharsuguda Govt",
+        "url": "https://jharsuguda.odisha.gov.in/tender?combine=print",
+        "base_url": "https://jharsuguda.odisha.gov.in"
+      }
+    ]
+  },
+  {
+    "is_group": true,
+    "shared_config": {
       "selector": ".panel-body > div > ul > li",
       "title_selector": ".panel-body > div > ul > li > div > p",
       "date_selector": ".Mi-Notice-Board-Date",

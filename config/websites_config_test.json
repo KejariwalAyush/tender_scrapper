@@ -1,12 +1,12 @@
 [
     {
         "is_group": false,
-        "name": "Dalmia College Rajgangpur",
-        "url": "https://dalmiacollegergp.ac.in/tender",
+        "name": "Sundargarh Govt",
+        "url": "https://sundargarh.odisha.gov.in/tender?combine=print",
         "selector": "tbody tr",
-        "title_selector": "td.news-li div.gentext",
-        "date_selector": "td.news-li div.date",
-        "link_selector": "td.news-li div.document-link a",
-        "base_url": "https://dalmiacollegergp.ac.in"
+        "title_selector": "td.views-field.views-field-title",
+        "date_selector": "td.views-field.views-field-nothing-2",
+        "link_selector": "td.views-field.views-field-nothing a",
+        "base_url": "https://sundargarh.odisha.gov.in"
     }
 ]
