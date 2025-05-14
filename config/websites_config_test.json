@@ -1,12 +1,12 @@
 [
     {
         "is_group": false,
-        "name": "Sundargarh Govt",
-        "url": "https://sundargarh.odisha.gov.in/tender?combine=print",
+        "name": "bargarh Govt",
+        "url": "https://bargarh.odisha.gov.in/tender?combine=print",
         "selector": "tbody tr",
         "title_selector": "td.views-field.views-field-title",
         "date_selector": "td.views-field.views-field-nothing-2",
         "link_selector": "td.views-field.views-field-nothing a",
-        "base_url": "https://sundargarh.odisha.gov.in"
+        "base_url": "https://bargarh.odisha.gov.in"
     }
 ]

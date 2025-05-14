@@ -179,45 +179,12 @@ class TenderScraper:
                             title = title_element.text.strip()
                     else:
                         title = "Unknown Title"
-                    date = "Unknown Date"
                     if date_element:
                         date_text = date_element.text.strip()
-                        # Try to extract date using regex (supports formats like DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, etc. and '26 May 2025')
-                        match = re.search(
-                            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4})',
-                            date_text)
-                        if match:
-                            raw_date = match.group(1)
-                            # Try to parse and convert to dd/mm/yy
-                            try:
-                                # Replace - with / for uniformity
-                                raw_date = raw_date.replace('-', '/')
-                                # Try parsing various formats
-                                parsed = False
-                                for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y/%m/%d", "%Y/%d/%m"):
-                                    try:
-                                        dt = datetime.strptime(raw_date, fmt)
-                                        date = dt.strftime("%d/%m/%y")
-                                        parsed = True
-                                        break
-                                    except ValueError:
-                                        continue
-                                if not parsed:
-                                    # Try parsing '26 May 2025' or '26 May 25'
-                                    for fmt in ("%d %B %Y", "%d %b %Y", "%d %B %y", "%d %b %y"):
-                                        try:
-                                            dt = datetime.strptime(raw_date, fmt)
-                                            date = dt.strftime("%d/%m/%y")
-                                            parsed = True
-                                            break
-                                        except ValueError:
-                                            continue
-                                if not parsed:
-                                    date = raw_date  # fallback if no format matched
-                            except Exception:
-                                date = raw_date
-                        else:
-                            date = date_text  # fallback to original text if no date found
+                    else:
+                        # Combine all text from the tender_element if date_element is missing
+                        date_text = " ".join([t.strip() for t in tender_element.stripped_strings])
+                    date = extract_date_from_text(date_text)
                     # Filter tenders based on keywords
                     # Calculate match score based on keywords
                     match_score = 0
@@ -402,3 +369,37 @@ class TenderScraper:
         with open(self.config_path, 'w') as configfile: # Use self.config_path
             self.config.write(configfile)
         logger.info(f"INI configuration saved to {self.config_path}")
+
+def extract_date_from_text(text):
+    """
+    Extracts a date from the given text and returns it in the format 'dd/mm/yy'.
+    Supports multiple date formats like DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, and '26 May 2025'.
+    
+    Args:
+        text (str): The input text containing a potential date.
+    
+    Returns:
+        str: The extracted and formatted date, or 'Unknown Date' if no valid date is found.
+    """
+    if not text:
+        return "Unknown Date"
+
+    # Try to extract date using regex
+    match = re.search(
+        r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4})',
+        text
+    )
+    if match:
+        raw_date = match.group(1)
+        # Replace '-' with '/' for uniformity
+        raw_date = raw_date.replace('-', '/')
+        # Try parsing various formats
+        for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y/%m/%d", "%Y/%d/%m", "%d %B %Y", "%d %b %Y", "%d %B %y", "%d %b %y"):
+            try:
+                dt = datetime.strptime(raw_date, fmt)
+                return dt.strftime("%d/%m/%y")
+            except ValueError:
+                continue
+        # Fallback to raw date if no format matched
+        return raw_date
+    return "Unknown Date"
