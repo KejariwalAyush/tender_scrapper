@@ -289,6 +289,17 @@ class TenderScraper:
             df.to_csv(csv_file, index=False)
             logger.info(f"Tender data saved to {csv_file}")
 
+            # Limit the number of Excel files to 2
+            existing_files = sorted(
+                [f for f in os.listdir(self.output_dir) if f.startswith("tenders_") and f.endswith(".csv")],
+                key=lambda x: os.path.getctime(os.path.join(self.output_dir, x))
+            )
+            while len(existing_files) > 2:
+                oldest_file = existing_files.pop(0)
+                oldest_file_path = os.path.join(self.output_dir, oldest_file)
+                os.remove(oldest_file_path)
+                logger.info(f"Deleted old tender file: {oldest_file_path}")
+
     def send_email_notification(self, new_tenders_map):
         if not self.email_config['enabled']:
             logger.info("Email notifications are disabled.")

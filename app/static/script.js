@@ -232,7 +232,7 @@ function createTableBody(tenders) {
         const row = document.createElement('tr');
 
         row.appendChild(createCell(idx + 1)); // Sl. No.
-        row.appendChild(createTitleCell(tender.title)); // Title
+        row.appendChild(createTitleCell(tender.title, tender.scraped_at)); // Title with "New" tag
         row.appendChild(createScoreCell(tender.match_score)); // Score
         row.appendChild(createDateCell(tender.date, currentDate)); // Date
         row.appendChild(createSourceCell(tender.tag)); // Source
@@ -250,11 +250,21 @@ function createCell(content) {
     return cell;
 }
 
-function createTitleCell(title) {
+function createTitleCell(title, scrapedAt) {
     const cell = document.createElement('td');
     const truncatedTitle = title.length > 200 ? title.substring(0, 250) + '...' : title;
+
+    // Check if the tender is new (scraped within the last 24 hours)
+    const isNew = scrapedAt && isNewTender(scrapedAt);
+
+    // Add "New" tag if applicable
+    const newTag = isNew
+        ? `<span class="badge bg-success text-white me-2" title="New Tender" style="vertical-align: top;">New</span>`
+        : '';
+
     cell.innerHTML = `
-        <span class="d-inline-block" style="max-width: 500px; cursor: pointer; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal;" title="Click to view full title">
+        ${newTag}
+        <span class="d-inline-block align-top" style="vertical-align: top; max-width: 500px; cursor: pointer; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal;" title="Click to view full title">
         ${truncatedTitle}
         </span>
     `;
@@ -599,4 +609,11 @@ function sortTendersByColumn(sortKey) {
 function getColumnIndex(sortKey) {
     const columns = ['index', 'title', 'score', 'date', 'source'];
     return columns.indexOf(sortKey) + 1; // Column index starts from 1
+}
+
+function isNewTender(scrapedAt) {
+    const scrapedDate = new Date(scrapedAt);
+    const currentDate = new Date();
+    const oneDay = 6 * 60 * 60 * 1000; // 24 hours in milliseconds
+    return currentDate - scrapedDate <= oneDay; // Check if scraped within the last 24 hours
 }
